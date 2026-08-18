@@ -1,0 +1,4 @@
+interface:
+  display_name: "Assessment By Domain"
+  short_description: "Map cross-domain impact breadth first"
+  default_prompt: "Use $assessment-by-domain to map this concern across the current domain landscape before planning implementation."

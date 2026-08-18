@@ -1,0 +1,4 @@
+interface:
+  display_name: "Delivery Program"
+  short_description: "Design and deliver long-horizon programs"
+  default_prompt: "Use $delivery-program to turn this long-horizon objective into an authorized, evidence-backed delivery program."

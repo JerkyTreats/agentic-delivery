@@ -1,0 +1,35 @@
+{
+  "name": "agentic-delivery",
+  "version": "0.1.0",
+  "description": "Breadth-first domain assessment and evidence-backed delivery programs for substantial engineering work.",
+  "author": {
+    "name": "JerkyTreats",
+    "url": "https://github.com/JerkyTreats"
+  },
+  "homepage": "https://github.com/JerkyTreats/agentic-delivery",
+  "repository": "https://github.com/JerkyTreats/agentic-delivery",
+  "license": "Apache-2.0",
+  "keywords": [
+    "architecture",
+    "assessment",
+    "delivery",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agentic Delivery",
+    "shortDescription": "Assess broadly and deliver in bounded slices.",
+    "longDescription": "Map cross-domain impact breadth first, then design and execute long-horizon delivery programs with explicit authority, evidence, and review boundaries.",
+    "developerName": "JerkyTreats",
+    "category": "Productivity",
+    "capabilities": [
+      "Analysis",
+      "Workflow"
+    ],
+    "defaultPrompt": [
+      "Assess this concern across every current domain.",
+      "Design an evidence-backed delivery program.",
+      "Deliver the next authorized program slice."
+    ]
+  }
+}
