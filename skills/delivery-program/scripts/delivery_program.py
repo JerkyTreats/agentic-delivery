@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scaffold and validate delivery-program ledgers and bounded packets."""
+"""Create and structurally validate delivery-program records."""
 
 from __future__ import annotations
 
@@ -8,24 +8,33 @@ from pathlib import Path
 from textwrap import dedent
 
 
-REQUIRED_LEDGER_HEADINGS = (
+LEDGER_HEADINGS = (
     "## Objective And Product Proof",
     "## Maturity Envelope",
-    "## Authorized Active Slice",
-    "## Uncommitted Backlog",
-    "## Product Trace",
-    "## Affected Domains",
-    "## Expansion Decisions",
-    "## Hard Limits And Tripwires",
-    "## Phase Inventory",
-    "## Work State",
-    "## Gate Evidence",
-    "## Complexity Delta",
-    "## Commit Effects",
-    "## Review State",
-    "## Risks And Exceptions",
-    "## Reassessment",
-    "## Final Reconciliation",
+    "## Product And Responsibility Trace",
+    "## Active Slice",
+    "## Backlog",
+    "## Authorization Register",
+    "## Decisions",
+    "## Anomalies And Supersession",
+    "## Slice Outcomes",
+    "## Reassessment And Reconciliation",
+)
+
+SLICE_HEADINGS = (
+    "## Product Contract",
+    "## Authorization",
+    "## Maturity And Scope",
+    "## Responsibility Disposition",
+    "## Policy Trace",
+    "## Proof And Retirement Evidence",
+    "## Limits And Stop Conditions",
+    "## Candidate And Complexity",
+    "## Logical Review",
+    "## Style Assurance",
+    "## Gate Acceptance",
+    "## Anomalies And Corrections",
+    "## Closeout",
 )
 
 
@@ -36,14 +45,59 @@ def write_new(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def read_validated(path: Path, headings: tuple[str, ...]) -> str:
+    if not path.is_file():
+        raise SystemExit(f"record does not exist: {path}")
+    content = path.read_text(encoding="utf-8")
+    missing = [heading for heading in headings if heading not in content]
+    if missing:
+        for heading in missing:
+            print(f"missing: {heading}")
+        raise SystemExit(1)
+    return content
+
+
+def validate(path: Path, headings: tuple[str, ...]) -> None:
+    read_validated(path, headings)
+    print(f"structurally valid: {path}")
+
+
+def section(content: str, heading: str) -> str:
+    remainder = content.split(heading, 1)[1]
+    return remainder.split("\n## ", 1)[0]
+
+
+def has_table_row(content: str, heading: str) -> bool:
+    rows = [line for line in section(content, heading).splitlines() if line.startswith("|")]
+    return len(rows) > 2
+
+
+def validate_slice(path: Path) -> None:
+    content = read_validated(path, SLICE_HEADINGS)
+    errors: list[str] = []
+    if "Readiness: build-ready" in content:
+        if "Authorized action: none" in content or "Authority source: none" in content:
+            errors.append("build-ready slice has no explicit authority")
+        if not has_table_row(content, "## Responsibility Disposition"):
+            errors.append("build-ready slice has no responsibility disposition")
+        if not has_table_row(content, "## Policy Trace"):
+            errors.append("build-ready slice has no policy trace")
+        if "assessment required" in content.lower():
+            errors.append("build-ready slice retains an unresolved assessment")
+    if errors:
+        for error in errors:
+            print(f"invalid: {error}")
+        raise SystemExit(1)
+    print(f"structurally valid: {path}")
+
+
 def init_ledger(args: argparse.Namespace) -> None:
     content = dedent(
         f"""\
         # Delivery Program Ledger
 
         Date: {args.date}
-        Branch: {args.branch}
-        Status: {args.status}
+        Lifecycle: backlog
         Readiness: {args.readiness}
 
         ## Objective And Product Proof
@@ -52,74 +106,34 @@ def init_ledger(args: argparse.Namespace) -> None:
 
         Direct product proof: {args.product_proof}
 
-        Acceptance evidence: {args.acceptance_evidence}
-
-        Explicit non-goals: {args.non_goals}
-
-        Applicable policy: {args.policies}
-
         ## Maturity Envelope
 
         Posture: {args.posture}
 
         Obligation floor: {args.obligation_floor}
 
-        Confidence and evidence: {args.maturity_evidence}
+        Evidence: {args.maturity_evidence}
 
-        User override: {args.user_override}
+        ## Product And Responsibility Trace
 
-        Approval gates: {args.approval_gates}
+        ## Active Slice
 
-        Review owner and budget: {args.review_budget}
+        None selected.
 
-        ## Authorized Active Slice
+        ## Backlog
 
-        None until explicitly activated.
+        ## Authorization Register
 
-        ## Uncommitted Backlog
-
-        ## Product Trace
-
-        ## Affected Domains
-
-        ## Expansion Decisions
-
-        ## Hard Limits And Tripwires
-
-        Hard limits: {args.hard_limits}
-
-        Tripwires: {args.tripwires}
-
-        ## Phase Inventory
-
-        | Phase | Product increment | Dependency | Status | Proof |
-        | --- | --- | --- | --- | --- |
-
-        ## Work State
-
-        | Slice | Branch or worktree | Owner | Status | Commit | Notes |
+        | Action | Authority | Scope | Boundary | Exceptions | Unauthorized |
         | --- | --- | --- | --- | --- | --- |
 
-        ## Gate Evidence
+        ## Decisions
 
-        | Gate | Command or observation | Result | Date | Notes |
-        | --- | --- | --- | --- | --- |
+        ## Anomalies And Supersession
 
-        ## Complexity Delta
+        ## Slice Outcomes
 
-        ## Commit Effects
-
-        ## Review State
-
-        Initial findings: not run
-
-        Verification: not run
-
-        ## Risks And Exceptions
-
-        ## Reassessment
-
-        ## Final Reconciliation
+        ## Reassessment And Reconciliation
         """
     )
     target = Path(args.path)
@@ -127,184 +141,123 @@ def init_ledger(args: argparse.Namespace) -> None:
     print(target)
 
 
-def validate_ledger(args: argparse.Namespace) -> None:
+def init_slice(args: argparse.Namespace) -> None:
+    content = dedent(
+        f"""\
+        # Active Slice {args.slice_id}
+
+        Date: {args.date}
+        Baseline: {args.baseline}
+        Lifecycle: active
+        Readiness: {args.readiness}
+
+        ## Product Contract
+
+        Observable behavior: {args.product_behavior}
+
+        Direct proof: {args.direct_proof}
+
+        ## Authorization
+
+        Authorized action: {args.authorized_action}
+
+        Authority source: {args.authority_source}
+
+        Actions still unauthorized: {args.unauthorized}
+
+        ## Maturity And Scope
+
+        ## Responsibility Disposition
+
+        | Responsibility | Mode | Current route and state | Successor | Superseded surface | Final disposition | Proof | Exception |
+        | --- | --- | --- | --- | --- | --- | --- | --- |
+
+        ## Policy Trace
+
+        | Policy obligation | Applies when | Responsibility | Deliverable | Proof | Exception authority |
+        | --- | --- | --- | --- | --- | --- |
+
+        ## Proof And Retirement Evidence
+
+        ## Limits And Stop Conditions
+
+        ## Candidate And Complexity
+
+        ## Logical Review
+
+        Verdict: not run
+
+        ## Style Assurance
+
+        Verdict: not eligible
+
+        ## Gate Acceptance
+
+        Verdict: not eligible
+
+        ## Anomalies And Corrections
+
+        ## Closeout
+        """
+    )
     target = Path(args.path)
-    if not target.is_file():
-        raise SystemExit(f"ledger does not exist: {target}")
-    content = target.read_text(encoding="utf-8")
-    missing = [heading for heading in REQUIRED_LEDGER_HEADINGS if heading not in content]
-    if missing:
-        for heading in missing:
-            print(f"missing: {heading}")
-        raise SystemExit(1)
-    if "Direct product proof:" not in content:
-        print("missing: Direct product proof")
-        raise SystemExit(1)
-    print(f"valid: {target}")
-
-
-def worker_packet(args: argparse.Namespace) -> None:
-    print(
-        dedent(
-            f"""\
-            Objective:
-            {args.objective}
-
-            Active slice:
-            {args.active_slice}
-
-            Direct product proof:
-            {args.product_proof}
-
-            Maturity envelope:
-            {args.maturity_envelope}
-
-            Frozen affected-domain set:
-            {args.affected_domains}
-
-            Hard limits and tripwires:
-            {args.limits}
-
-            Approval gates and approved expansions:
-            {args.approvals}
-
-            Write scope:
-            {args.write_scope}
-
-            Read scope:
-            {args.read_scope}
-
-            Existing seams to reuse:
-            {args.existing_seams}
-
-            Explicit non-goals:
-            {args.non_goals}
-
-            Required proof and gates:
-            {args.gates}
-
-            Review owner:
-            {args.review_owner}
-
-            Forbidden changes:
-            {args.forbidden}
-
-            Stop before unapproved expansion. Stop and report any tripwire breach.
-            Do not raise maturity, relax limits, or reinterpret the product proof.
-
-            Return changed files, direct proof, gate results, complexity delta,
-            commits or exception, and unresolved risks.
-            """
-        )
-    )
-
-
-def review_packet(args: argparse.Namespace) -> None:
-    print(
-        dedent(
-            f"""\
-            Review pass: {args.review_pass}
-            Review owner: {args.review_owner}
-
-            Objective:
-            {args.objective}
-
-            Active slice and direct proof:
-            {args.active_slice}
-
-            Maturity envelope:
-            {args.maturity_envelope}
-
-            Diff or commit range:
-            {args.diff}
-
-            Complexity delta:
-            {args.complexity_delta}
-
-            Expansion decisions:
-            {args.expansion_decisions}
-
-            Gate evidence:
-            {args.gate_evidence}
-
-            Applicable policy:
-            {args.policies}
-
-            Accepted finding identifiers:
-            {args.accepted_findings}
-
-            Return findings only for active-path correctness, current data or security risk,
-            applicable policy, and maturity fit. Freeze finding identifiers during an initial
-            pass. During verification, assess only accepted findings and regressions caused by
-            their fixes.
-            """
-        )
-    )
+    write_new(target, content)
+    print(target)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
 
-    init = commands.add_parser("init-ledger", help="create a new program ledger")
-    init.add_argument("--path", required=True)
-    init.add_argument("--date", required=True)
-    init.add_argument("--branch", default="not created")
-    init.add_argument("--status", default="proposed")
-    init.add_argument(
+    ledger = commands.add_parser("init-ledger", help="create a concise program ledger")
+    ledger.add_argument("--path", required=True)
+    ledger.add_argument("--date", required=True)
+    ledger.add_argument(
         "--readiness",
         choices=("assessment-only", "approval-ready", "build-ready"),
         default="assessment-only",
     )
-    init.add_argument("--objective", required=True)
-    init.add_argument("--product-proof", required=True)
-    init.add_argument("--acceptance-evidence", required=True)
-    init.add_argument("--non-goals", default="none recorded")
-    init.add_argument("--policies", default="active repository and host policy")
-    init.add_argument("--posture", required=True)
-    init.add_argument("--obligation-floor", required=True)
-    init.add_argument("--maturity-evidence", required=True)
-    init.add_argument("--user-override", default="none")
-    init.add_argument("--approval-gates", required=True)
-    init.add_argument("--review-budget", required=True)
-    init.add_argument("--hard-limits", required=True)
-    init.add_argument("--tripwires", required=True)
-    init.set_defaults(handler=init_ledger)
+    ledger.add_argument("--objective", required=True)
+    ledger.add_argument("--product-proof", required=True)
+    ledger.add_argument("--posture", required=True)
+    ledger.add_argument("--obligation-floor", required=True)
+    ledger.add_argument("--maturity-evidence", required=True)
+    ledger.set_defaults(handler=init_ledger)
 
-    validate = commands.add_parser("validate-ledger", help="check required ledger sections")
-    validate.add_argument("--path", required=True)
-    validate.set_defaults(handler=validate_ledger)
+    slice_record = commands.add_parser(
+        "init-slice", help="create one active-slice contract and delivery record"
+    )
+    slice_record.add_argument("--path", required=True)
+    slice_record.add_argument("--slice-id", required=True)
+    slice_record.add_argument("--date", required=True)
+    slice_record.add_argument("--baseline", required=True)
+    slice_record.add_argument(
+        "--readiness",
+        choices=("assessment-only", "approval-ready", "build-ready"),
+        default="assessment-only",
+    )
+    slice_record.add_argument("--product-behavior", required=True)
+    slice_record.add_argument("--direct-proof", required=True)
+    slice_record.add_argument("--authorized-action", default="none")
+    slice_record.add_argument("--authority-source", default="none")
+    slice_record.add_argument("--unauthorized", default="implementation and advancement")
+    slice_record.set_defaults(handler=init_slice)
 
-    worker = commands.add_parser("worker-packet", help="render a bounded worker packet")
-    worker.add_argument("--objective", required=True)
-    worker.add_argument("--active-slice", required=True)
-    worker.add_argument("--product-proof", required=True)
-    worker.add_argument("--maturity-envelope", required=True)
-    worker.add_argument("--affected-domains", default="not applicable")
-    worker.add_argument("--limits", required=True)
-    worker.add_argument("--approvals", required=True)
-    worker.add_argument("--write-scope", required=True)
-    worker.add_argument("--read-scope", default="repository evidence needed by the slice")
-    worker.add_argument("--existing-seams", required=True)
-    worker.add_argument("--non-goals", default="none recorded")
-    worker.add_argument("--gates", required=True)
-    worker.add_argument("--review-owner", required=True)
-    worker.add_argument("--forbidden", default="out-of-scope edits and unauthorized expansion")
-    worker.set_defaults(handler=worker_packet)
+    validate_ledger = commands.add_parser(
+        "validate-ledger", help="check the program-ledger structure"
+    )
+    validate_ledger.add_argument("--path", required=True)
+    validate_ledger.set_defaults(
+        handler=lambda args: validate(Path(args.path), LEDGER_HEADINGS)
+    )
 
-    review = commands.add_parser("review-packet", help="render an initial or verification packet")
-    review.add_argument("--review-pass", choices=("initial", "verification"), required=True)
-    review.add_argument("--review-owner", required=True)
-    review.add_argument("--objective", required=True)
-    review.add_argument("--active-slice", required=True)
-    review.add_argument("--maturity-envelope", required=True)
-    review.add_argument("--diff", required=True)
-    review.add_argument("--complexity-delta", required=True)
-    review.add_argument("--expansion-decisions", default="none")
-    review.add_argument("--gate-evidence", required=True)
-    review.add_argument("--policies", default="active repository and host policy")
-    review.add_argument("--accepted-findings", default="not applicable")
-    review.set_defaults(handler=review_packet)
+    validate_slice_parser = commands.add_parser(
+        "validate-slice", help="check the active-slice structure"
+    )
+    validate_slice_parser.add_argument("--path", required=True)
+    validate_slice_parser.set_defaults(
+        handler=lambda args: validate_slice(Path(args.path))
+    )
 
     return parser
 

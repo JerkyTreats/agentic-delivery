@@ -1,96 +1,77 @@
 # Program Ledger
 
-Use a concise ledger to preserve authority, maturity, product proof, and delivery state across work sessions.
+The ledger preserves program direction and authority across sessions. Keep detailed candidate evidence inside the active-slice record rather than duplicating it here.
 
-## Required Sections
+## Required Contents
 
 - objective and direct product proof
-- maturity envelope and user overrides
-- authorized active slice
-- uncommitted backlog
-- current product trace
+- maturity envelope and accepted overrides
+- current product and responsibility trace
 - frozen affected-domain set when applicable
+- active-slice identifier and link
+- backlog with dependencies and activation evidence
 - architectural expansion decisions
-- hard limits and tripwires
-- phase and dependency inventory
-- worker and worktree state
-- gate and product-proof evidence
-- complexity delta
-- commit effects
-- review owner and budget
-- frozen findings and verification result
-- risks and exceptions
-- next-slice reassessment
-- final reconciliation
+- hard limits and program tripwires
+- authorization register
+- decision log
+- anomaly and supersession log
+- slice outcomes and commit effects
+- reassessment and final reconciliation
 
-## Phase Status
+## Lifecycle And Authority
 
-Use:
+Use a compact lifecycle:
 
 - `backlog`
-- `proposed`
-- `awaiting approval`
-- `ready`
-- `in progress`
-- `integrating`
-- `proof failed`
-- `review failed`
+- `active`
+- `blocked`
+- `accepted`
 - `complete`
-- `deferred`
-- `rejected`
+- `superseded`
 
-Detailed source plans remain backlog until their next slice is explicitly activated.
+Readiness is separate and uses `assessment-only`, `approval-ready`, or `build-ready`.
 
-## Evidence Standard
+For every authorization record:
 
-Point to current code, product traces, commits, tests, runtime observations, user evidence, authoritative policy, or explicit exceptions.
+- authorized action
+- authority source
+- exact scope
+- activation date or candidate identity
+- expiry or next approval boundary
+- approved exceptions
+- actions that remain unauthorized
 
-Do not use plan detail, test count, reviewer confidence, or implemented infrastructure as evidence that maturity increased.
+Acceptance never implies commit, push, deployment, or next-slice authority.
 
-## Expansion Decisions
+## Backlog
 
-For every proposed architectural expansion record:
+Record later product increments with their outcome, current dependency, and activation evidence. Do not make their worker packets or gates acceptance-ready.
 
-- direct product behavior unblocked
-- existing approach considered
-- current consumers
-- envelope authority or user approval
-- disposition
+A detailed future design may inform the program but does not create implementation authority.
 
-## Complexity Delta
+## Evidence And Decisions
 
-After each slice record:
+Use current code, runtime wiring, tests, observations, authoritative policy, commits, user decisions, or explicit exceptions as evidence.
 
-- changed files
-- lines added and removed
-- new crates and dependencies
-- new public contracts
-- new stores and schemas
-- new background runtimes
-- direct product behaviors proved
+Record decisions that change scope, responsibility ownership, maturity, sequence, or authorization. Link rather than copy supporting assessments.
 
-Crossing a tripwire changes the slice status to `awaiting approval` until explicitly resolved.
+Do not use plan volume, test count, reviewer confidence, or internal infrastructure as evidence of product maturity.
 
-## Review State
+## Anomalies And Supersession
 
-Record one review owner for the active slice. Embedded workers do not own review.
+Record material evidence that contradicts a frozen contract or accepted claim. Name the affected slice, obligation, earliest invalid boundary, dependent verdicts, disposition authority, and successor state.
 
-Record the initial frozen finding set and one verification result. Do not append unrelated findings during verification.
+Never silently edit history to make a failed claim appear correct. Preserve useful evidence while marking invalid acceptance or design authority as superseded.
 
-## Commit Gate
+## Advancement
 
-Commit accepted work after direct product proof and selected gates pass when user intent and repository policy permit it.
+Before selecting another slice, record:
 
-Before each delivery commit, record one Commit Effect beginning with `If applied, this commit`.
+- completed or accepted prior outcome
+- exact remaining product gap
+- continued validity of the maturity envelope
+- unresolved replacement or compatibility obligations
+- crossed limits or anomalies
+- explicit activation authority
 
-Do not create ledger-only launch or closeout commits unless policy or the user requires them.
-
-## Advancement Gate
-
-Before activating the next slice record:
-
-- new maturity evidence from completed behavior
-- whether the accepted envelope still applies
-- whether the next slice directly advances product behavior
-- any approval gate or tripwire crossed
-- explicit authorization state
+When authority is absent, the next task is design or approval, not implementation.
